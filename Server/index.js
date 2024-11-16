@@ -53,6 +53,9 @@ cloudinary.config({
 
 
 //routes
+app.use("/", (req, res) => {
+  return res.send("Server is running!");
+});
 app.use('/api/user', UserRouter);
 app.use('/api/chat', ChatRouter);
 
