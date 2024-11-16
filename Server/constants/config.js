@@ -1,6 +1,6 @@
 const corsOptions = {
     origin: [
-        'https://mern-chat-app-pjwb.vercel.app'
+        'https://mern-chat-app-kd4r.vercel.app'
     ],
     credentials: true,
 
