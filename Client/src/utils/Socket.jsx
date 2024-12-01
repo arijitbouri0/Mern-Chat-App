@@ -7,7 +7,7 @@ const getSocket = () => useContext(SocketContext);
 
 const SocketProvider = ({ children }) => {
     // Create socket instance and memoize it
-    const socket = useMemo(() => io("http://localhost:8000", {
+    const socket = useMemo(() => io("https://mern-chat-app-backend-vudf.onrender.com", {
         withCredentials: true,
     }), []);  // Empty array ensures it's only created once
 
