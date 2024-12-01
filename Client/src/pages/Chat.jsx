@@ -1,22 +1,21 @@
-import { AttachFile as AttachFileIcon, Send as SendIcon, TryRounded } from '@mui/icons-material';
+import { useInfiniteScrollTop } from '6pp';
+import { AttachFile as AttachFileIcon, Send as SendIcon } from '@mui/icons-material';
 import { IconButton, Stack } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import FileMenu from '../components/dialogs/FileMenu';
 import AppLayout from '../components/layout/AppLayout';
+import { TypingLoader } from '../components/layout/Loaders';
 import MessageComponent from '../components/shared/MessageComponent';
 import { InputBox } from '../components/styles/StyledComponents';
 import { grayColor, orange } from '../constants/color';
 import { ALERT, CHAT_JOINED, CHAT_LEAVED, NEW_MESSAGE, TYPING_START, TYPING_STOP } from '../constants/event';
 import { useErrors, useSocketEvents } from '../hooks/hook';
 import { useChatDetailsQuery, useGetMessagesQuery } from '../Redux/api/api';
-import { getSocket } from '../utils/Socket';
-import { useInfiniteScrollTop } from '6pp'
-import { toggleFileMenu } from '../Redux/reducers/misc';
 import { removeMessagesAlert } from '../Redux/reducers/chat';
-import { } from '../constants/event'
-import { TypingLoader } from '../components/layout/Loaders';
-import { useNavigate } from 'react-router-dom';
+import { toggleFileMenu } from '../Redux/reducers/misc';
+import { getSocket } from '../utils/Socket';
 
 const Chat = ({ chatId }) => {
   const bottomRef = useRef(null)
@@ -157,7 +156,7 @@ const Chat = ({ chatId }) => {
         boxSizing={'border-box'}
         padding={'1rem'}
         spacing={'1rem'}
-        bgcolor={grayColor}
+        bgcolor={'white'}
         height={'90%'}
         sx={{
           overflowX: 'hidden',

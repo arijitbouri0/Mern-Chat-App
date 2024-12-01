@@ -131,7 +131,6 @@ const GroupChats = () => {
       userId
     })
   }
-  console.log(groupDetails.data?.chat?.members)
 
   const GroupName = <Stack
     direction={'row'}
