@@ -213,7 +213,7 @@ const MessageComponent = ({ message, user }) => {
         color: "white",
         borderRadius: "20px",
         padding: "1rem",
-        maxWidth: "70%",
+        width:'fit-content',
         position: "relative",
         marginBottom: "20px",
       }}
