@@ -4,7 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EmojiPicker from "emoji-picker-react";
 
 const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction, sameSender }) => {
-  const reactions = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+  const reactions = ["👍", "❤️", "😂", "😮", "😢"];
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null); // Ref for emoji picker
   const containerRef = useRef(null); // Ref for the dialog container
