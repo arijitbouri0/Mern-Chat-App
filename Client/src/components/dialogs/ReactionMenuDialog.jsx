@@ -3,58 +3,61 @@ import { Menu, MenuItem, Stack } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EmojiPicker from "emoji-picker-react";
 
-const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction,sameSender }) => {
+const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction, sameSender }) => {
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "😡"];
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const emojiPickerRef = useRef(null); // Ref to emoji picker div for outside click detection
-  const messageAreaRef = useRef(null); // Ref for the message area to detect clicks outside
+  const emojiPickerRef = useRef(null); // Ref for emoji picker
+  const containerRef = useRef(null); // Ref for the dialog container
 
-  // Close emoji picker when clicked outside
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (
         emojiPickerRef.current &&
         !emojiPickerRef.current.contains(event.target) &&
-        messageAreaRef.current &&
-        !messageAreaRef.current.contains(event.target)
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
       ) {
         setShowEmojiPicker(false);
       }
     };
 
-    // Add event listener on mount
     document.addEventListener("mousedown", handleOutsideClick);
-
-    // Cleanup on unmount
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, []);
 
   const handleEmojiClick = (emojiData) => {
-    console.log(emojiData); // Handle emoji selection here
-    setShowEmojiPicker(false); // Close picker after selecting emoji
+    onSelectReaction(emojiData.emoji); // Pass selected emoji back to parent
+    setShowEmojiPicker(false);
   };
 
   const toggleEmojiPicker = () => {
     setShowEmojiPicker(!showEmojiPicker);
-    onClose() // Toggle emoji picker visibility
+    onClose();
   };
 
-  // Styles for the emoji picker
-  const emojiPickerStyles = {
-    position: "fixed", // Fixed position to center the screen
-    top: "50%", // Vertically center
-    left: sameSender ? "auto" : "100%", // Center when different sender, else move based on sender condition
-    right: sameSender ? "50%" : "auto", 
-    transform: "translate(-50%, -50%)", // Adjust for centering
-    zIndex: 1500, // Ensure it's on top of other content
-    maxHeight: "500px", // Optional max height to prevent overflow
-    width:'auto'
+  const calculatePickerPosition = () => {
+    const baseStyles = {
+      position: "fixed",
+      transform: "translateY(50%)",
+      zIndex: 1500,
+      backgroundColor: "#fff",
+      borderRadius: "10px",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)",
+    };
+
+    if (window.innerWidth <= 768) {
+      // For small screens, center the picker
+      return { ...baseStyles, left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+    } else {
+      // For larger screens, position relative to the message
+      return { ...baseStyles, left: sameSender ? "calc(-500%)" : "calc(100%)", top: anchorEl?.getBoundingClientRect().top || 0 };
+    }
   };
 
   return (
-    <div ref={messageAreaRef}>
+    <div ref={containerRef}>
       {/* Reaction Menu */}
       <Menu
         anchorEl={anchorEl}
@@ -67,17 +70,16 @@ const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction,sameSend
             boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
             display: "flex",
             justifyContent: "center",
-            zIndex: 1400, // Below emoji picker
           },
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center">
           {reactions.map((reaction) => (
             <MenuItem
               key={reaction}
               onClick={() => onSelectReaction(reaction)}
               sx={{
-                fontSize: "2rem", // Increased size
+                fontSize: "2rem",
                 cursor: "pointer",
                 padding: "0.1rem",
                 "&:hover": { backgroundColor: "#f0f0f0" },
@@ -86,13 +88,8 @@ const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction,sameSend
               {reaction}
             </MenuItem>
           ))}
-          
-          {/* Add Button to toggle emoji picker */}
-          <MenuItem
-            onClick={toggleEmojiPicker}
-            sx={{ padding: "0.1rem" }}
-          >
-            <AddIcon fontSize="inherit" />
+          <MenuItem onClick={toggleEmojiPicker} sx={{ padding: "0.1rem" }}>
+            <AddIcon fontSize="large" />
           </MenuItem>
         </Stack>
       </Menu>
@@ -100,14 +97,13 @@ const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction,sameSend
       {/* Emoji Picker */}
       {showEmojiPicker && (
         <div
-          ref={emojiPickerRef} // Reference for detecting click outside the emoji picker
-          className="emoji-picker-wrapper"
-          style={emojiPickerStyles} // Apply center positioning styles
+          ref={emojiPickerRef}
+          style={calculatePickerPosition()}
         >
           <EmojiPicker
             onEmojiClick={handleEmojiClick}
             pickerStyle={{
-              fontSize: "2rem", // Adjust size for the picker
+              fontSize: "1.5rem",
               borderRadius: "10px",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
             }}
