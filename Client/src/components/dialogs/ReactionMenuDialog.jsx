@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { setShowEmojiPicker } from '../../Redux/reducers/misc';
 
 const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction, sameSender }) => {
-  const reactions = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+  const reactions = ["👍", "❤️", "😂", "😮", "😢"];
 
   const dispatch = useDispatch();
   const toggleEmojiPicker = () => {
