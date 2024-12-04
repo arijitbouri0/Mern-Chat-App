@@ -11,6 +11,7 @@ const initialState = {
   isDeleteMenu: false,
   isLeaveMenu: false,
   uploadingLoader: false,
+  showEmojiPicker:false,
   selectedDeleteChat: {
     chatId: "",
     groupChat: false,
@@ -51,6 +52,9 @@ const miscSlice = createSlice({
     setLeaveMenu: (state,action) => {
       state.isLeaveMenu = action.payload;
     },
+    setShowEmojiPicker: (state,action) => {
+      state.showEmojiPicker = action.payload;
+    },
   },
 });
 
@@ -64,7 +68,8 @@ export const {
   toggleDeleteMenu,
   setUploadingLoader,
   setSelectedDeleteChat,
-  setLeaveMenu
+  setLeaveMenu,
+  setShowEmojiPicker
 } = miscSlice.actions;
 
 export default miscSlice;
