@@ -161,7 +161,6 @@ const Chat = ({ chatId, onlineUser }) => {
   }
 
 
-
   const filteredMembers = chatDetails?.data?.chat?.members?.filter(member => member._id !== user._id);
   const fileMenu = (e) => {
     dispatch(toggleFileMenu(true))

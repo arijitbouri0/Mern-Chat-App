@@ -1,13 +1,42 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Menu, MenuItem, Stack } from "@mui/material";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setShowEmojiPicker } from '../../Redux/reducers/misc';
 
-const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction, sameSender }) => {
+const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction,sameSender }) => {
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null); // Ref to emoji picker div for outside click detection
+  const messageAreaRef = useRef(null); // Ref for the message area to detect clicks outside
 
-  const dispatch = useDispatch();
+  // Close emoji picker when clicked outside
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target) &&
+        messageAreaRef.current &&
+        !messageAreaRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    // Add event listener on mount
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  const handleEmojiClick = (emojiData) => {
+    console.log(emojiData); // Handle emoji selection here
+    setShowEmojiPicker(false); // Close picker after selecting emoji
+  };
+
   const toggleEmojiPicker = () => {
     dispatch(setShowEmojiPicker(true));
     onClose(); // Toggle emoji picker visibility
@@ -48,9 +77,12 @@ const ReactionMenuDialog = ({ anchorEl, open, onClose, onSelectReaction, sameSen
           ))}
 
           {/* Add Button to toggle emoji picker */}
-          {/* <MenuItem onClick={toggleEmojiPicker} sx={{ padding: "0.1rem" }}>
+          {/* <MenuItem
+            onClick={toggleEmojiPicker}
+            sx={{ padding: "0.1rem" }}
+          >
             <AddIcon fontSize="inherit" />
-          </MenuItem> */}
+          </MenuItem>  */}
         </Stack>
       </Menu>
     </>
