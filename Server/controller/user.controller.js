@@ -41,6 +41,36 @@ export const login = async (req, res, next) => {
     sendtoken(res, user, 201, `Welcome Back , ${user.name}`);
 };
 
+export const editUser = async (req, res, next) => {
+    try {
+        const userId = req.user;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        const { name, bio } = req.body;
+        const file=req.file;
+        if (name) user.name = name;
+        if (bio) user.bio = bio;
+        if (file) {
+            const result = await uploadFilesToCloudinary([file]);
+            user.avatar = {
+                public_id: result[0].public_id,
+                url: result[0].url,
+            };
+        }
+        await user.save();
+        res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user,
+        });
+    } catch (error) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+};
+
 export const getMyProfile = async (req, res, next) => {
     if (!req.user) {
         return next(new ErrorHandler("Please Login ", 404))
@@ -52,24 +82,6 @@ export const getMyProfile = async (req, res, next) => {
     })
 }
 
-export const updateUserProfile = async (req, res) => {
-    const { name, bio } = req.body;
-    const avatar = req.file ? { public_id: req.file.filename, url: req.file.path } : null;
-
-    try {
-        const user = await User.findById(req.user.id);
-
-        if (name) user.name = name;
-        if (bio) user.bio = bio;
-        if (avatar) user.avatar = avatar;
-
-        await user.save();
-
-        res.json({ message: 'Profile updated successfully', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
 
 export const logout = async (req, res) => {
     res.status(200).cookie("chat-app", "", { ...cookieOption, maxAge: 0 })
@@ -174,21 +186,22 @@ export const sendRequest = async (req, res, next) => {
     if (existingRequest) {
         return next(new ErrorHandler("Request already accepted", 400));
     }
-
+    const requestUser=await User.findById(req.user);
+    const receiverUser=await User.findById(receiverId);
+    
     // Create the friend request
     const request = await Request.create({
-        sender: req.user,
-        receiver: receiverId
+        sender: requestUser,
+        receiver: receiverUser,
     });
-
     // Emit the NEW_REQUEST event to the receiver
     const io = req.app.get("io");
     const receiverSocket = userSocketIDs.get(receiverId); // Get the receiver's socket ID
 
     if (receiverSocket) {
         io.to(receiverSocket).emit(NEW_REQUEST, {
-            senderId: req.user,
-            requestId: request._id,
+            sender: req.user,
+            requester: request._id,
             message: "You have a new friend request."
         });
     }
@@ -204,8 +217,8 @@ export const acceptRequest = async (req, res, next) => {
      const { requestId, accept } = req.body;
    
     const request = await Request.findById(requestId.toString())
-        .populate("sender", "name")
-        .populate("receiver", "name");
+        .populate("sender")
+        .populate("receiver");
 
     if (!request) return next(new ErrorHandler("Request not found", 404));
 
@@ -221,11 +234,10 @@ export const acceptRequest = async (req, res, next) => {
         });
     }
 
-    const members = [request.sender._id, request.receiver._id];
+    const members = [request.sender, request.receiver];
     await Promise.all([
         Chat.create({
             members,
-            name: `${request.sender.name}-${request.receiver.name}`
         }),
         request.deleteOne()
     ]);
@@ -238,6 +250,7 @@ export const acceptRequest = async (req, res, next) => {
         senderId: request.sender._id
     });
 };
+
 
 
 

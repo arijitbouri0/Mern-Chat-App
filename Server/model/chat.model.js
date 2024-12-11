@@ -4,14 +4,7 @@ const ChatSchema = new Schema(
     {
         name: {
             type: String,
-            required: true,
         },
-        // avatar: [
-        //     {
-        //         type: String,
-        //         required: true,
-        //     }
-        // ],
         groupChat: {
             type: Boolean,
             default: false,

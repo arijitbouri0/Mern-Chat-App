@@ -24,13 +24,17 @@ const uri = process.env.MONGODB_URI
 const app = express()
 const server = createServer(app);
 const io = new Server(server, {
-  cors: corsOptions
+  cors:corsOptions
 });
+
+
+
 
 app.set("io", io)
 
 const userSocketIDs = new Map();
 const onlineUsers = new Set();
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,7 +43,6 @@ app.use(cookieParser())
 app.use(
   cors(corsOptions)
 );
-
 
 connectDB(uri).then(() =>
   console.log("MongoDb connected")
@@ -70,7 +73,7 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   const user = socket.user;
   userSocketIDs.set(user._id.toString(), socket.id)
-  socket.on(NEW_MESSAGE, async ({ chatId, members, message }) => {
+  socket.on(NEW_MESSAGE, async ({ chatId, memberIds, message }) => {
     try {
       const messageForRealTime = {
         content: message,
@@ -86,8 +89,7 @@ io.on("connection", (socket) => {
         chat: chatId,
       };
 
-      const membersSockets = getSockets(members);
-
+      const membersSockets = getSockets(memberIds);
       io.to(membersSockets).emit(NEW_MESSAGE, {
         chatId,
         message: messageForRealTime
@@ -102,29 +104,29 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on(TYPING_START, ({ chatId, members }) => {
-    const membersSockets = getSockets(members);
+  socket.on(TYPING_START, ({ chatId, memberIds }) => {
+    const membersSockets = getSockets(memberIds);
     socket.to(membersSockets).emit(TYPING_START, {
       chatId,
     })
   });
 
-  socket.on(TYPING_STOP, ({ chatId, members }) => {
-    const membersSockets = getSockets(members);
+  socket.on(TYPING_STOP, ({ chatId, memberIds }) => {
+    const membersSockets = getSockets(memberIds);
     socket.to(membersSockets).emit(TYPING_STOP, {
       chatId,
     })
   });
 
-  socket.on(CHAT_JOINED, ({ userId, members }) => {
+  socket.on(CHAT_JOINED, ({ userId, memberIds }) => {
     onlineUsers.add(userId.toString());
-    const membersSocket = getSockets(members);
+    const membersSocket = getSockets(memberIds);
     io.to(membersSocket).emit(ONLINE_USER, Array.from(onlineUsers))
   })
 
-  socket.on(CHAT_LEAVED, ({ userId, members }) => {
+  socket.on(CHAT_LEAVED, ({ userId, memberIds }) => {
     onlineUsers.delete(userId.toString());
-    const membersSocket = getSockets(members);
+    const membersSocket = getSockets(memberIds);
     io.to(membersSocket).emit(ONLINE_USER, Array.from(onlineUsers))
   })
 

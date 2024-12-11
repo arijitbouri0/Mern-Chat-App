@@ -6,8 +6,10 @@ const SocketContext = createContext();
 const getSocket = () => useContext(SocketContext);
 
 const SocketProvider = ({ children }) => {
+
+    const socketUrl = import.meta.env.VITE_SERVER; 
     // Create socket instance and memoize it
-    const socket = useMemo(() => io("https://mern-chat-app-backend-vudf.onrender.com", {
+    const socket = useMemo(() => io(socketUrl, {
         withCredentials: true,
     }), []);  // Empty array ensures it's only created once
 

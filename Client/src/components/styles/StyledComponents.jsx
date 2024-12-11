@@ -20,7 +20,8 @@ border:none;
 outline:none;
 padding:0 3rem;
 border-radius:1.5rem;
-background-color:${grayColor}
+background-color:#1B1212;
+color:white;
 `
 
 const bounceAnimation=keyframes`

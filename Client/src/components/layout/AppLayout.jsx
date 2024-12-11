@@ -1,19 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import Header from './Header';
-import Title from '../shared/Title';
 import { Drawer, Grid, Skeleton } from '@mui/material';
-import ChatList from '../specific/ChatList';
-import { useNavigate, useParams } from 'react-router-dom';
-import Profile from '../specific/Profile';
-import { useMyChatsQuery, useRenameGroupMutation } from '../../Redux/api/api';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setLeaveMenu, setSelectedDeleteChat, toggleMobileMenuFriend } from '../../Redux/reducers/misc';
-import { useErrors, useSocketEvents } from '../../hooks/hook';
-import { getSocket } from '../../utils/Socket';
-import { NEW_MESSAGE_ALERT, NEW_REQUEST, ONLINE_USER, REFETCH_CHATS } from '../../constants/event';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMyChatsQuery } from '../../Redux/api/api';
 import { incrementNotification, setMessagesAlert } from '../../Redux/reducers/chat';
+import { setLeaveMenu, setSelectedDeleteChat, toggleMobileMenuFriend } from '../../Redux/reducers/misc';
+import { NEW_MESSAGE_ALERT, NEW_REQUEST, ONLINE_USER, REFETCH_CHATS } from '../../constants/event';
+import { useErrors, useSocketEvents } from '../../hooks/hook';
 import { getOrSaveFromStorage } from '../../lib/features';
-import DeletChat from '../dialogs/DeletChat'
+import { getSocket } from '../../utils/Socket';
+import DeletChat from '../dialogs/DeletChat';
+import Title from '../shared/Title';
+import ChatList from '../specific/ChatList';
+import Header from './Header';
 
 
 const AppLayout = () => (WrappedComponent) => {
@@ -21,7 +20,7 @@ const AppLayout = () => (WrappedComponent) => {
     const params = useParams(); // Move useParams inside this inner function
     const chatId = params.chatId;
     const dispatch = useDispatch()
-    const navigate=useNavigate()
+    const navigate = useNavigate()
     const [anchorEl, setAnchorEl] = useState(null);
     const socket = getSocket()
 
@@ -31,22 +30,22 @@ const AppLayout = () => (WrappedComponent) => {
 
     useErrors([{ isError, error }]);
 
-    useEffect(()=>{
-      getOrSaveFromStorage({key:NEW_MESSAGE_ALERT,value:newMessagesAlert})
-    },[newMessagesAlert])
+    useEffect(() => {
+      getOrSaveFromStorage({ key: NEW_MESSAGE_ALERT, value: newMessagesAlert })
+    }, [newMessagesAlert])
 
 
-    const handleDeleteChat = (event, _id,groupChat) => {
+    const handleDeleteChat = (event, _id, groupChat) => {
       event.preventDefault();
       setAnchorEl(event.currentTarget); // Set anchorEl to open the menu
       dispatch(setLeaveMenu(true));
-      dispatch(setSelectedDeleteChat({_id,groupChat}))
-  };
+      dispatch(setSelectedDeleteChat({ _id, groupChat }))
+    };
 
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-    dispatch(setLeaveMenu(false));
-};
+    const handleCloseMenu = () => {
+      setAnchorEl(null);
+      dispatch(setLeaveMenu(false));
+    };
 
     const handleClose = () => {
       dispatch(toggleMobileMenuFriend(false))
@@ -58,16 +57,15 @@ const AppLayout = () => (WrappedComponent) => {
     }, [chatId])
 
     const newRequestListener = useCallback((data) => {
-      console.log(data);
       dispatch(incrementNotification())
     }, [dispatch])
 
-    const refetchListener=useCallback(()=>{ 
+    const refetchListener = useCallback(() => {
       refetch()
       navigate("/")
-    },[refetch])  
+    }, [refetch])
 
-    const [onlineUsers,setOnlineUsers]=useState([]);
+    const [onlineUsers, setOnlineUsers] = useState([]);
 
     const onlineUsersListener = useCallback((data) => {
       setOnlineUsers(data);
@@ -76,59 +74,74 @@ const AppLayout = () => (WrappedComponent) => {
     const eventHandlers = {
       [NEW_MESSAGE_ALERT]: newMessageAlertHandler,
       [NEW_REQUEST]: newRequestListener,
-      [REFETCH_CHATS]:refetchListener,
-      [ONLINE_USER]:onlineUsersListener,
+      [REFETCH_CHATS]: refetchListener,
+      [ONLINE_USER]: onlineUsersListener,
     };
- 
-     useSocketEvents(socket, eventHandlers)
+
+    useSocketEvents(socket, eventHandlers)
+
 
     return (
       <>
-
         <Title />
-        <Header />
+        <Header sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: '1000',
+        }} />
         <DeletChat anchorEl={anchorEl} onClose={handleCloseMenu} />
         {isLoading ?
           <Skeleton /> :
-          <Drawer open={isMobileMenuFriend} onClose={handleClose}>
+          <Drawer
+            open={isMobileMenuFriend}
+            onClose={handleClose}
+            PaperProps={{
+              sx: {
+                backgroundColor: '#121212',
+                borderColor: '#28282B',  // Add the border color
+                borderWidth: '1px',
+              }
+            }}>
             <ChatList
-              w="70vw"
-              chats={data.transformedChats}
+              w="80vw"
+              chats={data?.transformedChats}
               chatId={chatId}
               newMessagesAlert={newMessagesAlert}
               onlineUser={onlineUsers}
               handleDeleteChat={handleDeleteChat}
+              handleClose={handleClose}
             />
           </Drawer>
         }
-        <Grid container height={"calc(100vh - 4rem)"}>
+        <Grid container height={"calc(100vh-4rem)"} backgroundColor={'#121212'} overflow={'hidden'}>
           <Grid
             item
-            sm={4}
+            lg={4}
             md={3}
-            sx={{ display: { xs: 'none', sm: 'block' } }
+            sm={2}
+            xs={0}
+            sx={{
+              display: { xs: 'none', sm: 'none', md: 'block' },
+              border: "1px solid #28282B",
             }
-            overflow={'auto'}
+            }
             height={'100%'}
+            overflow={'auto'}
+
           >
             {isLoading ?
               <Skeleton /> :
               <ChatList
-                chats={data.transformedChats}
+                chats={data?.transformedChats}
                 chatId={chatId}
                 newMessagesAlert={newMessagesAlert}
                 onlineUser={onlineUsers}
                 handleDeleteChat={handleDeleteChat}
-              />}
-
+              />
+            }
           </Grid>
-          <Grid item xs={12} sm={8} md={5} lg={6} height={"100%"}>
-            <WrappedComponent {...props} chatId={chatId} />
-          </Grid>
-          <Grid item lg={3} md={4} height={"100%"}
-            sx={{ display: { xs: 'none', md: 'block', padding: '1rem' }, padding: '1rem', bgcolor: 'rgba(0,0,0,0.60)' }}
-          >
-            <Profile />
+          <Grid item xs={12} sm={10} md={9} lg={8} height={"calc(100vh-4rem)"} backgroundColor={'black'} sx={{ overflow: 'hidden' }}>
+            <WrappedComponent {...props} chatId={chatId} onlineUser={onlineUsers} chats={data?.transformedChats} />
           </Grid>
         </Grid>
       </>
@@ -137,4 +150,3 @@ const AppLayout = () => (WrappedComponent) => {
 };
 
 export default AppLayout;
-

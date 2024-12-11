@@ -13,8 +13,8 @@ const AvatrCard = ({ avatar = [], max = 4 }) => {
                             src={transformImage(src)}
                             alt={`Avatr ${index}`}
                             sx={{
-                                width: '3rem',
-                                height: '3rem',
+                                width: '5rem',
+                                height: '5rem',
                                 position:'absolute',
                                 left:{
                                     xs:`${0.5+index}rem`,

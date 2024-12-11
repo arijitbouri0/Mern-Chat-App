@@ -35,10 +35,12 @@ export const newGroupChat = async (req, res, next) => {
         return next(new ErrorHandler(error.message, 500))
     }
 }
+
+
 export const getMyChats = async (req, res, next) => {
     try {
         const chats = await Chat.find({ members: req.user }).populate("members",
-            "name avatar"
+            "name avatar userName bio"
         );
 
 
@@ -176,7 +178,7 @@ export const removeMembers = async (req, res, next) => {
             return next(new ErrorHandler("User not found in the chat members", 400));
         }
 
-        const oldChatMembers=chat.members.map((i)=>i.toString());
+        const oldChatMembers = chat.members.map((i) => i.toString());
         chat.members = chat.members.filter(memberId => memberId.toString() !== userId);
         await chat.save();
 
@@ -184,7 +186,7 @@ export const removeMembers = async (req, res, next) => {
         const removedMemberName = removedMemberDetails ? removedMemberDetails.name : 'Unknown Member';
 
         emitEvent(req, ALERT, [userId], {
-            message:`${removedMemberName} has beem removed from the group`,
+            message: `${removedMemberName} has beem removed from the group`,
             chatId
         });
         emitEvent(
@@ -202,6 +204,56 @@ export const removeMembers = async (req, res, next) => {
         return next(new ErrorHandler(error.message, 500));
     }
 };
+
+export const changeAdmin = async (req, res, next) => {
+    try {
+        const { chatId, newAdminId } = req.body;  // Assuming newAdminId is provided in the request body
+
+        const chat = await Chat.findById(chatId);
+
+        if (!chat) {
+            return next(new ErrorHandler("Chat not found", 404));
+        }
+        if (chat.creator.toString() !== req.user.toString()) {
+            return next(new ErrorHandler("You are not allowed to change the admin", 403));
+        }
+
+        if (!chat.members.map(m => m.toString()).includes(newAdminId)) {
+            return next(new ErrorHandler("User not found in the chat members", 400));
+        }
+
+        // Update the admin of the chat
+        chat.creator = newAdminId; // Assuming chat model has an 'admin' field
+
+        await chat.save();
+
+        const newAdminDetails = await User.findById(newAdminId, 'name');
+        const newAdminName = newAdminDetails ? newAdminDetails.name : 'Unknown Member';
+
+        // Emit event to new admin
+        emitEvent(req, ALERT, [newAdminId], {
+            message: `${newAdminName}, you are the new admin of the group`,
+            chatId
+        });
+
+        // Notify all members about the new admin
+        emitEvent(
+            req,
+            REFETCH_CHATS,
+            chat.members,
+            `Member ${newAdminName} has been assigned as the new group Admin.`
+        );
+
+        return res.status(200).json({
+            success: true,
+            chat,
+        });
+    } catch (error) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+};
+
+
 export const leaveGroup = async (req, res, next) => {
     try {
         const chatId = req.params.id;
@@ -300,8 +352,8 @@ export const sendAttachments = async (req, res, next) => {
             attachments, // Attachments array from upload results
             createdAt: new Date().toISOString(),
         };
-        
-        
+
+
 
         const messageForDatabase = {
             content: "",
@@ -333,26 +385,23 @@ export const getChatDetails = async (req, res, next) => {
     try {
         if (req.query.populate === 'true') {
             const chat = await Chat.findById(req.params.id)
-                .populate("members", "name avatar")
+                .populate("members", "name avatar bio userName")
                 .lean();
 
             if (!chat) return next(new ErrorHandler("Chat not found", 404));
-
             chat.members = chat.members.map(({ _id, name, avatar }) => ({
                 _id,
                 name,
-                avatar: avatar.url
+                avatar
             }))
-
             return res.status(200).json({
                 success: true,
                 chat
             });
         } else {
-            const chat = await Chat.findById(req.params.id);
-
+            const chat = await Chat.findById(req.params.id)
+                .populate("members", "name avatar bio userName")
             if (!chat) return next(new ErrorHandler("Chat not found", 404));
-
             return res.status(200).json({
                 success: true,
                 chat
@@ -448,12 +497,12 @@ export const getMessages = async (req, res, next) => {
         const limit = 20;
         const skip = (page - 1) * limit;
 
-        const chat=await Chat.findById(chatId);
+        const chat = await Chat.findById(chatId);
 
-        if(!chat) return next(new ErrorHandler("Chat not found",404));
+        if (!chat) return next(new ErrorHandler("Chat not found", 404));
 
-        if(!chat.members.includes(req.user.toString())) 
-            return next(new ErrorHandler("You are not allowed to acces this chat",404));
+        if (!chat.members.includes(req.user.toString()))
+            return next(new ErrorHandler("You are not allowed to acces this chat", 404));
 
         const [message, totalMessagesCount] = await Promise.all([Message.find({ chat: chatId })
             .sort({ createdAt: -1 })
@@ -476,6 +525,33 @@ export const getMessages = async (req, res, next) => {
     }
 };
 
+// export const reactToMessage = async (req, res, next) => {
+//     try {
+//         const { messageId, reaction } = req.body;
+//         const userId = req.user._id;
+//         let existingReaction = await message.findOne({ messageId, userId });
+
+//         if (existingReaction) {
+//             // Update the existing reaction if it already exists
+//             existingReaction.reaction = reaction;
+//             await existingReaction.save();
+//             return res.status(200).json({ message: 'Reaction updated successfully' });
+//         }
+
+//         // Create a new reaction if it doesn't exist
+//         const newReaction = new Reaction({
+//             messageId,
+//             userId,
+//             reaction,
+//         });
+
+//         await newReaction.save();
+//         return res.status(201).json({ message: 'Reaction added successfully' });
+
+//     } catch (error) {
+
+//     }
+// }
 
 export const getAvailableUsersForGroup = async (req, res, next) => {
     try {
@@ -504,7 +580,7 @@ export const getAvailableUsersForGroup = async (req, res, next) => {
 
         const availableUsersDetails = await User.find({
             '_id': { $in: [...availableUserIds] }  // Find users whose IDs are in availableUserIds
-        }).select('name avatar userId'); 
+        }).select('name avatar userId');
 
         // Convert the Set to an array for the response
         return res.status(200).json({

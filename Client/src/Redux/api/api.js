@@ -158,6 +158,24 @@ const api = createApi({
       }),
       invalidatesTags: ['Chat'], // Cache the results under 'User' tag
     }),
+    updadteUser: builder.mutation({
+      query: (data) => ({
+        url: `/user/edit`,
+        method: "POST",
+        credentials: 'include',
+        body: data
+      }),
+      invalidatesTags: ['User'],
+    }),
+    changeGroupAdmin: builder.mutation({
+      query: ({chatId,newAdminId}) => ({
+        url: `chat/changeAdmin`,
+        method:"PUT",
+        credentials: 'include',
+        body:{chatId,newAdminId},
+      }),
+      invalidatesTags: ['Chat'], // Cache the results under 'User' tag
+    }),
   }),
 });
 
@@ -179,5 +197,7 @@ export const {
   useGetAvailableMembersQuery,
   useDeleteChatMutation,
   useLeaveGroupMutation,
+  useUpdadteUserMutation,
+  useChangeGroupAdminMutation
 } = api;
 export default api;

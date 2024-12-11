@@ -19,24 +19,32 @@ const ChatItem = ({
     handleDeleteChat
 }) => {
     return (
-        <Link to={`/chat/${_id}`} style={{ padding: '0' }}onContextMenu={(event) => handleDeleteChat(event, _id,groupChat)} >
+        <Link
+            to={`/chat/${_id}`}
+            style={{ textDecoration: 'none' ,padding:0}}
+            onContextMenu={(event) => handleDeleteChat(event, _id, groupChat)}
+        >
             <motion.div
                 initial={{ opacity: 0, y: "-100%" }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 style={{
                     display: 'flex',
-                    gap: '1rem',
+                    gap: '3rem',
                     alignItems: 'center',
-                    padding: '1rem',
-                    backgroundColor: samesender ? 'black' : 'unset',
-                    color: samesender ? 'white' : 'unset',
+                    padding: '2rem',
+                    backgroundColor: samesender ? '#7F00FF' : '#333',
+                    color: 'white',
                     position: 'relative',
+                    borderRadius: '1rem',
+                    '&:hover': {
+                        backgroundColor: samesender ? '#6a0dad' : '#28282B',
+                    },
                 }}
             >
                 <AvatrCard avatar={avatar} />
                 <Stack>
-                    <Typography>{name}</Typography>
+                    <Typography variant='h4'>{name}</Typography>
                     {newMessageAlert && newMessageAlert.count > 0 && (
                         <Typography>{newMessageAlert.count} New Messages</Typography>
                     )}
@@ -62,5 +70,4 @@ const ChatItem = ({
 }
 
 export default memo(ChatItem);
-
 

@@ -27,6 +27,18 @@ const MessageSchema = new Schema(
             ref: "Chat",
             required: true,
         },
+        reactions: [
+            {
+                userId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                    required:true
+                },
+                reaction: {
+                    type: String, // Example reactions like '👍', '❤️'
+                },
+            },
+        ],
     },
     {
         timestamps: true, 

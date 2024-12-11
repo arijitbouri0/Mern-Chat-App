@@ -1,13 +1,13 @@
+import axios from 'axios';
 import React, { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import ProtectRouter from './components/auth/ProtectRouter';
 import { LayoutLoaders } from './components/layout/Loaders';
-import axios from 'axios';
 import { server } from './constants/confing';
-import { useDispatch, useSelector } from 'react-redux';
 import { userExist, userNotExists } from './Redux/reducers/auth';
-import { Toaster } from 'react-hot-toast';
-import { SocketProvider } from './utils/Socket';  // Import SocketProvider
+import { SocketProvider } from './utils/Socket'; // Import SocketProvider
 
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -71,6 +71,7 @@ const App = () => {
               }
             />
           </Route>
+
 
           {/* Login route */}
           <Route

@@ -24,11 +24,19 @@ const AddMemberDialog = ({ onAddMembers, availableUsers, selectedMembers, setSel
     <Dialog
       open={isAddMember}
       onClose={handleClose}
+      PaperProps={{
+        sx: {
+          bgcolor: 'black',
+          color: 'white',
+          border: '2px solid #333',
+          padding: '1rem',
+          maxWidth: '90%',
+          boxSizing: 'border-box',
+        }
+      }}
     >
       <Stack
         p={{ xs: '1rem', sm: '1rem' }}
-        width={'30rem'}
-        spacing={'1rem'}
       >
         <DialogTitle>Add Members</DialogTitle>
         <DialogContent>
@@ -49,7 +57,7 @@ const AddMemberDialog = ({ onAddMembers, availableUsers, selectedMembers, setSel
           </div>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose} color="inherit">Cancel</Button>
           <Button
             color="primary"
             onClick={onAddMembers}

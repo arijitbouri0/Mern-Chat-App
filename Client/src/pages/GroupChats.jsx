@@ -1,19 +1,21 @@
-import { Add as AddIcon, Delete as DeleteIcon, Done as DoneIcon, Edit as EditIcon, KeyboardBackspace as KeyboardBackspaceIcon, Menu as MenuIcon } from '@mui/icons-material'
-import { Avatar, Backdrop, Box, Button, CircularProgress, Drawer, Grid, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material'
-import React, { lazy, memo, Suspense, useEffect, useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Add as AddIcon, Delete as DeleteIcon, KeyboardBackspace as KeyboardBackspaceIcon, Menu as MenuIcon } from '@mui/icons-material'
+import { Backdrop, Box, Button, Drawer, Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { LayoutLoaders } from '../components/layout/Loaders'
-import AvatrCard from '../components/shared/AvatrCard'
-import { Link } from '../components/styles/StyledComponents'
+import GroupList from '../components/specific/GroupList'
+import GroupName from '../components/specific/GroupName'
+import MemberList from '../components/specific/MemberList'
 import { useAsyncMutation, useErrors } from '../hooks/hook'
-import { useAddGroupMemberMutation, useChatDetailsQuery, useDeleteChatMutation, useGetAvailableMembersQuery, useMyGroupsQuery, useRemoveGroupMemberMutation, useRenameGroupMutation } from '../Redux/api/api'
+import { useAddGroupMemberMutation, useChangeGroupAdminMutation, useChatDetailsQuery, useDeleteChatMutation, useGetAvailableMembersQuery, useMyGroupsQuery, useRemoveGroupMemberMutation, useRenameGroupMutation } from '../Redux/api/api'
 import { toggleAddMember, toggleDeleteMenu } from '../Redux/reducers/misc'
 const ConfirmDeleteDialog = lazy(() => import('../components/dialogs/ConfirmDeleteDialog'))
 const AddMemberDialog = lazy(() => import('../components/dialogs/AddMemberDialog'))
 
 const GroupChats = () => {
 
+  const { user } = useSelector((state) => state.auth)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate()
   const [members, setMembers] = useState([])
@@ -43,6 +45,8 @@ const GroupChats = () => {
   const handleMobileClose = () => {
     setIsMobileMenuOpen(false)
   }
+  const admin = groupDetails?.data?.chat?.creator;
+  const isAccess = admin === user._id;
 
   const errors = [{
     isError: myGroups.isError,
@@ -61,7 +65,7 @@ const GroupChats = () => {
     const groupData = groupDetails.data;
     if (groupData) {
       setGroupName(groupData.chat.name);
-      setUpdatedGroupName(groupData.name);
+      setUpdatedGroupName(groupData.chat.name);
       setMembers(groupData.chat.members)
     }
     else {
@@ -94,7 +98,7 @@ const GroupChats = () => {
     >
       <Tooltip title='menu'>
         <IconButton onClick={handleMobile}>
-          <MenuIcon />
+          <MenuIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
     </Box>
@@ -117,7 +121,7 @@ const GroupChats = () => {
     </Tooltip>
   </>
 
-  const updateGroupName = () => {
+  const handlerUpdateGroupName = () => {
     setIsEdit(false)
     renameGroup("Updating Group Name..", {
       chatId,
@@ -131,29 +135,6 @@ const GroupChats = () => {
       userId
     })
   }
-
-  const GroupName = <Stack
-    direction={'row'}
-    alignItems={'center'}
-    justifyContent={'center'}
-    spacing={'1rem'}
-    padding={'3rem'}>
-    {isEdit ? (
-      <>
-        <TextField value={updatedGroupName} onChange={(e) => setUpdatedGroupName(e.target.value)} />
-        <IconButton onClick={updateGroupName} disabled={isLoadingGroupName}>
-          <DoneIcon />
-        </IconButton>
-      </>
-    ) : (
-      <>
-        <Typography variant='h4'>{groupName}</Typography>
-        <IconButton disabled={isLoadingGroupName} onClick={() => setIsEdit(true)}>
-          <EditIcon />
-        </IconButton>
-      </>
-    )}
-  </Stack>
 
   useEffect(() => {
     setGroupName(`Group Name ${chatId}`)
@@ -170,6 +151,13 @@ const GroupChats = () => {
   const openAddMembersDialog = () => {
     dispatch(toggleAddMember(true));
   }
+
+  const [changeAdmin] = useAsyncMutation(useChangeGroupAdminMutation)
+
+  const handleChangeAdmin = (newAdminId) => {
+    changeAdmin("Assigning new admin..", { chatId, newAdminId })
+  }
+
 
   const [selectedMembers, setSelectedMembers] = useState([]);
   const addMemberHandler = () => {
@@ -200,8 +188,6 @@ const GroupChats = () => {
         // Handle error, e.g., show a notification
       });
   }
-
-
   const ButtonGroup = <Stack
     direction={{
       sm: 'row',
@@ -220,7 +206,9 @@ const GroupChats = () => {
     myGroups.isLoading ? <LayoutLoaders /> :
       <Grid
         container
-        height={'100vh'}>
+        height={'100vh'}
+        sx={{ backgroundColor: 'black', color: 'white' }}
+      >
         <Grid
           item
           sx={{
@@ -230,12 +218,12 @@ const GroupChats = () => {
             }
           }}
           sm={4}
-          bgcolor={'bisque'}
+          bgcolor={'#121212'}
           overflow={'auto'}
           height={'100%'}
 
         >
-          <GroupList myGroups={myGroups.data.groups} />
+          <GroupList myGroups={myGroups.data.groups} chatId={chatId}/>
         </Grid>
         <Grid
           item
@@ -252,69 +240,31 @@ const GroupChats = () => {
           {IconBtns}
           {
             groupName && <>
-              {GroupName}
+              <GroupName
+                groupName={groupName}
+                updatedGroupName={updatedGroupName}
+                setUpdatedGroupName={setUpdatedGroupName}
+                isEdit={isEdit}
+                setIsEdit={setIsEdit}
+                isLoading={isLoadingGroupName}
+                handlerUpdateGroupName={handlerUpdateGroupName}
+              />
 
               <Typography
-                margin={'2rem'}
+                margin={'1rem'}
                 alignSelf={'flex-start'}
                 variant='body1'
+                sx={{ color: 'white' }}
               >Members
               </Typography>
-
-              <Stack
-                maxWidth="45rem"
-                width="100%"
-                boxSizing="border-box"
-                padding={{
-                  sm: '1rem',
-                  xs: '0',
-                  md: '1rem 4rem',
-                }}
-                spacing={2} // Adjust spacing
-                height="50vh"
-                overflow="auto"
-                borderRadius="0.5rem" // Add rounded corners to main container
-              >
-
-                {isLoadingRemoveGroupMember || isDeleteGroupMember ? <CircularProgress /> :
-                  groupDetails?.data?.chat?.members.map((member) => (
-                    <Stack
-                      key={member._id}
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      padding="0.75rem"
-                      bgcolor="white"
-                      borderRadius="0.5rem"
-                      border="2px solid grey"
-                      marginBottom="0.5rem"
-                    >
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar src={member.avatar} alt={member.name} />
-                        <Typography var
-                          iant="body1" style={{ fontWeight: '500' }}>
-                          {member.name}
-                        </Typography>
-                      </Stack>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                        onClick={() => removeMember(member._id)}
-                        sx={{
-                          borderRadius: '0.5rem',
-                          padding: '0.25rem 1rem',
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </Stack>
-                  ))}
-
-
-              </Stack>
-
-
+              <MemberList
+                members={members}
+                admin={admin}
+                isAccess={isAccess}
+                handleChangeAdmin={handleChangeAdmin}
+                removeMember={removeMember}
+                isLoadingRemoveGroupMember={false}
+              />
               {ButtonGroup}
             </>
           }
@@ -335,63 +285,28 @@ const GroupChats = () => {
           selectedMembers={selectedMembers} // Pass selected members here
           setSelectedMembers={setSelectedMembers} // Pass function to update selected members
         />
-
         <Drawer
           open={isMobileMenuOpen}
           onClose={handleMobileClose}
+          PaperProps={{
+            sx: {
+              backgroundColor:'#121212',
+              borderColor: '#28282B',  // Add the border color
+              borderWidth: '1px',
+            }
+          }}
           sx={{
             display: {
               xs: 'block',
               sm: 'none'
-            }
+            },
           }}
         >
-          <GroupList w={'50vw'} myGroups={myGroups.data.groups} chatId={chatId} />
+          <GroupList w={'80vw'} myGroups={myGroups.data.groups} chatId={chatId} />
         </Drawer>
       </Grid>
   )
 }
-
-const GroupList = ({ w = '100%', myGroups = [], chatId }) => (
-  <Stack width={w}>
-    {
-      myGroups.length > 0 ? (
-        myGroups.map((group) => <GroupListItem group={group} chatId={chatId} key={group._id} />)
-      ) : (
-        <Typography padding={'1rem'} textAlign={'center'}>
-          No groups
-        </Typography>
-      )
-    }
-  </Stack>
-)
-
-
-const GroupListItem = memo(({ group, chatId }) => {
-  const {
-    name,
-    avatar,
-    _id,
-  } = group
-
-  return (
-    <Link to={`?group=${_id}`}
-      onClick={(e) => {
-        if (chatId === _id) e.preventDefault();
-      }}
-
-    >
-      <Stack
-        direction={'row'}
-        spacing={'1rem'}
-        alignItems={'center'}
-      >
-        <AvatrCard avatar={avatar} />
-        <Typography>{name}</Typography>
-      </Stack>
-    </Link>
-  )
-})
 
 export default GroupChats
 
