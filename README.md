@@ -1,5 +1,5 @@
 
-# Real Time Chat Application
+# Chat Application
 
 
 This is a real-time chat application built with React, Node.js, Express, MongoDB , Cloudinary and Socket.io. It allows users to send and receive messages and notification in real-time, create group, send attachments and interact seamlessly.
@@ -9,6 +9,20 @@ This is a real-time chat application built with React, Node.js, Express, MongoDB
 Live Link:
 https://mern-chat-app-u26b.vercel.app/
 
+### Guest Login Credentials
+To explore the application without creating an account, you can use the following guest login credentials:
+
+#### Guest User 1
+```bash
+ Username: guest1
+ Password: Guestuser1@
+```
+#### Guest User 2
+```bash
+ Username: guest2
+ Password: Guestuser2@
+```
+Simply enter these credentials on the login page to access the application as a guest.
 ## Screenshots
 
 ### Authorization
